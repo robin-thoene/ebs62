@@ -31,64 +31,105 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Konverter',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Einheiten Konverter'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
   final String title;
+
+  const MyHomePage({super.key, required this.title});
 
   @override
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  /// The actual value that the user put into the text field
+  String? _valueToConvert;
 
-  void _incrementCounter() {
+  /// Whether the conversion of the user text field input to double was successful or not
+  String? _valueConversionErrorMsg;
+
+  /// The parsed user text field input
+  double? _parsedValueToConvert;
+
+  /// On press handler for the button that performs the conversion
+  void onPressedConvertButton() {
+    // Ensure that the text field input is not empty
+    if (_valueToConvert == null || _valueToConvert == "") {
+      setState(() {
+        _valueConversionErrorMsg = "Der Wert darf nicht leer sein";
+      });
+      return;
+    }
+    // Ensure that the text field value can be converted
+    var d = double.tryParse(_valueToConvert!);
     setState(() {
-      _counter++;
+      _parsedValueToConvert = d;
+      _valueConversionErrorMsg = null;
     });
+    if (_parsedValueToConvert == null) {
+      _valueConversionErrorMsg = "Die Eingabe is keine valide Dezimalzahl";
+      // If the input can not be parsed to double,
+      // do not proceed and set the validation error
+      return;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+        appBar: AppBar(
+          backgroundColor: Theme.of(context).colorScheme.primary,
+          title: Text(widget.title),
+          foregroundColor: Colors.white,
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ),
-    );
+        body: Center(
+          child: Padding(
+            padding: EdgeInsets.symmetric(vertical: 40.0, horizontal: 10.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              spacing: 30.0,
+              children: <Widget>[
+                const Text(
+                  'Wert',
+                ),
+                TextField(
+                  decoration: InputDecoration(
+                      hintText:
+                          "Bitte geben Sie den zu konvertierenden Wert an",
+                      errorText: _valueConversionErrorMsg),
+                  keyboardType: TextInputType.numberWithOptions(decimal: true),
+                  onChanged: (newValue) {
+                    _valueToConvert = newValue;
+                  },
+                ),
+                const Text('Von'),
+                const Text('TODO: input'),
+                const Text('Bis'),
+                const Text('TODO: input'),
+                ElevatedButton(
+                  onPressed: onPressedConvertButton,
+                  style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4.0),
+                    ),
+                  ),
+                  child: const Text('Konvertieren'),
+                )
+              ],
+            ),
+          ),
+        ));
   }
 }
