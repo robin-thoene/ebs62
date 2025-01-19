@@ -4,15 +4,18 @@ import 'package:flutter/material.dart';
 ///
 /// The enumeration value contains the conversion value to
 /// the reference unit [DistanceUnit.meters] as [toMeters].
+/// Additionally a [label] is included that can be used for
+/// displaying the option in a UI.
 enum DistanceUnit {
-  meters(toMeters: 1.0),
-  kilometers(toMeters: 1000.0),
-  feet(toMeters: 0.3048),
-  miles(toMeters: 1609.34);
+  meters(toMeters: 1.0, label: "Meter"),
+  kilometers(toMeters: 1000.0, label: "Kilometer"),
+  feet(toMeters: 0.3048, label: "Feet"),
+  miles(toMeters: 1609.34, label: "Mile");
 
-  const DistanceUnit({required this.toMeters});
+  const DistanceUnit({required this.toMeters, required this.label});
 
   final double toMeters;
+  final String label;
 }
 
 /// Converts a value [inputValue] to another unit [outputUnit].
@@ -22,6 +25,16 @@ enum DistanceUnit {
 double convert(
     double inputValue, DistanceUnit inputUnit, DistanceUnit outputUnit) {
   return inputValue * inputUnit.toMeters / outputUnit.toMeters;
+}
+
+/// Builds the item list for the [DistanceUnit] drop down menu.
+List<DropdownMenuItem> getMenuItemsForDistanceUnit() {
+  return DistanceUnit.values
+      .map((entry) => DropdownMenuItem(
+            value: entry,
+            child: Text(entry.label),
+          ))
+      .toList();
 }
 
 void main() {
@@ -63,12 +76,25 @@ class _MyHomePageState extends State<MyHomePage> {
   /// The parsed user text field input
   double? _parsedValueToConvert;
 
+  /// The value for the source distance unit to convert from
+  DistanceUnit _sourceUnit = DistanceUnit.meters;
+
+  /// The value for the output distance unit to convert to
+  DistanceUnit _outputUnit = DistanceUnit.meters;
+
+  /// The conversion result
+  double? _result;
+
   /// On press handler for the button that performs the conversion
   void onPressedConvertButton() {
+    // Reset the result on each attempt first
+    setState(() {
+      _result = null;
+    });
     // Ensure that the text field input is not empty
     if (_valueToConvert == null || _valueToConvert == "") {
       setState(() {
-        _valueConversionErrorMsg = "Der Wert darf nicht leer sein";
+        _valueConversionErrorMsg = "Die Eingabe darf nicht leer sein";
       });
       return;
     }
@@ -79,11 +105,14 @@ class _MyHomePageState extends State<MyHomePage> {
       _valueConversionErrorMsg = null;
     });
     if (_parsedValueToConvert == null) {
-      _valueConversionErrorMsg = "Die Eingabe is keine valide Dezimalzahl";
+      _valueConversionErrorMsg = "Die Eingabe ist keine valide Dezimalzahl";
       // If the input can not be parsed to double,
       // do not proceed and set the validation error
       return;
     }
+    setState(() {
+      _result = convert(_parsedValueToConvert!, _sourceUnit, _outputUnit);
+    });
   }
 
   @override
@@ -115,9 +144,27 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                 ),
                 const Text('Von'),
-                const Text('TODO: input'),
-                const Text('Bis'),
-                const Text('TODO: input'),
+                DropdownButton(
+                  value: _sourceUnit,
+                  isExpanded: true,
+                  items: getMenuItemsForDistanceUnit(),
+                  onChanged: (newVal) {
+                    setState(() {
+                      _sourceUnit = newVal;
+                    });
+                  },
+                ),
+                const Text('Nach'),
+                DropdownButton(
+                  value: _outputUnit,
+                  isExpanded: true,
+                  items: getMenuItemsForDistanceUnit(),
+                  onChanged: (newVal) {
+                    setState(() {
+                      _outputUnit = newVal;
+                    });
+                  },
+                ),
                 ElevatedButton(
                   onPressed: onPressedConvertButton,
                   style: ElevatedButton.styleFrom(
@@ -126,7 +173,10 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   child: const Text('Konvertieren'),
-                )
+                ),
+                Text(_parsedValueToConvert != null && _result != null
+                    ? '${_parsedValueToConvert!.toStringAsFixed(2)} ${_sourceUnit.label} sind ${_result!.toStringAsFixed(2)} ${_outputUnit.label}'
+                    : "")
               ],
             ),
           ),
