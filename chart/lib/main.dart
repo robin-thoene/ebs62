@@ -1,7 +1,79 @@
 import 'package:flutter/material.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
+import 'dart:math';
+
+/// Represents a single category to be displayed in the chart.
+///
+/// The [label] is used as label on the X-Axis, the [value] is
+/// the actual value displayed on the Y-Axis.
+class Category {
+  Category(this.label, this.value);
+  String label;
+  int value;
+}
+
+/// Helper to create random int values
+final _random = Random();
+int _randomValue(int min, int max) => min + _random.nextInt(max - min);
 
 void main() {
   runApp(const MyApp());
+}
+
+class CategoriesBarChart extends StatelessWidget {
+  final List<charts.Series> seriesList = _createChartData();
+
+  CategoriesBarChart({Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return charts.BarChart(
+      seriesList,
+      animate: false,
+      primaryMeasureAxis: charts.NumericAxisSpec(
+        renderSpec: charts.GridlineRendererSpec(
+          lineStyle: charts.LineStyleSpec(
+            color: charts.MaterialPalette.blue
+                .shadeDefault, // Set grid lines color to blue
+            thickness: 1, // Optional: Adjust thickness of grid lines
+          ),
+        ),
+      ),
+      domainAxis: charts.OrdinalAxisSpec(
+        renderSpec: charts.GridlineRendererSpec(
+          lineStyle: charts.LineStyleSpec(
+            color: charts.MaterialPalette.blue
+                .shadeDefault, // Set grid lines color to blue
+            thickness: 1, // Optional: Adjust thickness of grid lines
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Create one series with sample hard coded data.
+  static List<charts.Series<Category, String>> _createChartData() {
+    final data = [
+      Category("A", _randomValue(0, 100)),
+      Category("B", _randomValue(0, 100)),
+      Category("C", _randomValue(0, 100)),
+      Category("D", _randomValue(0, 100)),
+      Category("E", _randomValue(0, 100)),
+      Category("F", _randomValue(0, 100)),
+      Category("G", _randomValue(0, 100)),
+      Category("H", _randomValue(0, 100)),
+    ];
+
+    return [
+      charts.Series<Category, String>(
+        id: 'Categories',
+        colorFn: (_, __) => charts.MaterialPalette.red.shadeDefault,
+        domainFn: (Category category, _) => category.label,
+        measureFn: (Category category, _) => category.value,
+        data: data,
+      )
+    ];
+  }
 }
 
 class MyApp extends StatelessWidget {
@@ -10,11 +82,11 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Säulendiagramm',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Säulendiagramm'),
     );
   }
 }
@@ -29,38 +101,33 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.title),
+        foregroundColor: Colors.white,
+        backgroundColor: Colors.black,
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             const Text(
-              'You have pushed the button this many times:',
+              'Gesamtverkäufe',
+              style: TextStyle(fontSize: 32),
             ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headline4,
+            Padding(
+              padding: const EdgeInsets.only(top: 32.0),
+              child: Material(
+                  elevation: 8.0,
+                  child: SizedBox(height: 250, child: CategoriesBarChart())),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }
